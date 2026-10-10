@@ -1,0 +1,16 @@
+/* MOCR-only semantics. Shared visual rules are copied unchanged into style.css. */
+dialog.modal { padding: 0; color: var(--text); }
+dialog.modal::backdrop { background: rgba(17, 24, 39, 0.48); }
+button:disabled { opacity: 0.45; cursor: default; }
+tbody tr[data-index] { cursor: pointer; }
+tbody tr:focus-visible, th:focus-visible, button:focus-visible, a:focus-visible, summary:focus-visible {
+  outline: 2px solid var(--blue); outline-offset: -2px;
+}
+.detail-value { white-space: pre-wrap; }
+.detail-section { margin-top: 10px; }
+.detail-section summary { cursor: pointer; }
+/* Keep the localized pagination labels intact on narrow screens. */
+@media (max-width: 720px) {
+  .status-line, .pagination { flex-wrap: wrap; }
+  .pagination button { white-space: nowrap; }
+}

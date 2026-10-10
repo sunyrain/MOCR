@@ -2,7 +2,7 @@
 
 Browse: **https://sunyrain.github.io/MOCR/**
 
-MOCR organizes literature-derived materials, lithography performance, properties and source references. The static interface adapts the OPV-DB browser in the same project, with fields specific to metal-oxo cluster and organic-ligand photoresists.
+MOCR organizes literature-derived materials, lithography performance, properties and source references. The static interface uses the OPV-DB browser's original stylesheet and component layout, with fields specific to metal-oxo cluster and organic-ligand photoresists.
 
 ## Release: 2026-10-10
 
@@ -35,6 +35,18 @@ python -m http.server 8000
 ```
 
 Open http://localhost:8000/. No dependencies or build step are required for the site.
+
+## OPV visual theme
+
+`style.css` is an unchanged copy of the style block in the reference `OPV/sites/performance-database/index.html`. Header, release banner, six colored statistic cards, filters, summary bars, compact table, pagination and detail cards use the same classes and layout. Keep shared colors, typography, spacing and responsive breakpoints in this stylesheet; `mocr.css` only adapts the native dialog, keyboard focus, multiline record details and wrapping of localized pagination labels.
+
+To synchronize from the local OPV reference, run from this repository:
+
+```bash
+python scripts/sync_opv_theme.py --source ../../OPV/sites/performance-database/index.html
+```
+
+## Rebuild data
 
 To rebuild the public payload from a local curated MOCR export:
 

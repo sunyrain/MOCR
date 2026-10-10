@@ -1,20 +1,37 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="zh-CN">
-<head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>MOCR | 金属氧簇光刻胶数据集</title><link rel="stylesheet" href="style.css"><script src="app.js" defer></script></head>
+<head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>MOCR Literature-Mined Photoresist Database</title>
+<link rel="stylesheet" href="style.css?v=opv-20261010"><link rel="stylesheet" href="mocr.css?v=opv-20261010">
+<script src="app.js?v=opv-20261010" defer></script>
+</head>
 <body>
-<header class="site-header"><div class="header-inner"><div><div class="eyebrow">LITERATURE-MINED MATERIALS DATABASE</div><h1>MOCR <span>金属氧簇光刻胶数据集</span></h1><p class="subtitle">Metal-oxo cluster & organic-ligand photoresists · 材料、曝光条件与性能的可追溯数据</p></div><div class="header-actions"><a class="btn" href="https://github.com/sunyrain/MOCR">GitHub ↗</a><a class="btn" href="data/mocr.sqlite" download>下载 SQLite</a></div></div></header>
-<main>
-<div class="release-strip"><strong>2026.10.10 · 全文提取数据</strong><span>原始单位与定义保留 · 跨论文材料未去重</span></div>
-<div id="stats" class="stats-grid" aria-label="数据规模"></div>
-<div class="summary-grid"><section class="panel"><h2>论文范围</h2><div id="scopeBars"></div></section><section class="panel"><h2>使用与质量说明</h2><p>这是模型提取的研究数据，尚未完成独立科学准确性评估。剂量、尺寸、LER/LWR 必须结合定义与实验条件比较。</p><p id="quality"></p><p>详情提供 DOI 与来源块／页码；论文全文与图像不在本站分发。空白表示未提取，不能据此判断原文没有报告。</p><a href="data/dictionary.json">数据字典 ↗</a> · <a href="data/mocr.json" download>完整 JSON</a></section></div>
-<section class="panel browser"><div class="section-top"><div><div class="eyebrow">EXPLORE THE DATA</div><h2>浏览与筛选</h2></div><button id="export" class="btn" disabled>下载筛选结果 JSON</button></div>
-<div class="tabs" role="tablist" aria-label="数据表"><button class="tab active" role="tab" aria-selected="true" data-table="records">光刻性能</button><button class="tab" role="tab" aria-selected="false" data-table="properties">材料性质</button><button class="tab" role="tab" aria-selected="false" data-table="materials">材料</button><button class="tab" role="tab" aria-selected="false" data-table="papers">论文</button><button class="tab" role="tab" aria-selected="false" data-table="missing_fulltext">未获取全文</button></div>
-<div class="filters"><label class="search">关键词<input id="search" type="search" placeholder="材料、配体、化学式、DOI、论文标题…"></label><label>论文范围<select id="scope"><option value="">全部范围</option><option value="direct_metal_oxo_resist">直接相关</option><option value="related_resist">相邻领域</option><option value="review">综述</option><option value="out_of_scope">范围外</option></select></label><label>数据来源<select id="origin"><option value="">全部来源</option><option value="study_experiment">本研究</option><option value="literature_comparison">文献对照</option><option value="uncertain">来源不明</option></select></label><label>曝光方式<select id="exposure"><option value="">全部方式</option></select></label><label>年份<select id="year"><option value="">全部年份</option></select></label><button id="reset" class="btn">重置</button></div>
-<div class="table-summary"><span id="count" role="status">正在加载数据…</span><label>排序 <select id="sort"><option value="year-desc">年份：新到旧</option><option value="year-asc">年份：旧到新</option><option value="title">论文标题</option></select></label></div>
-<div class="table-wrap"><table><thead id="head"></thead><tbody id="rows"></tbody></table></div>
-<div class="pagination"><button id="prev" class="btn" disabled>上一页</button><span id="page"></span><button id="next" class="btn" disabled>下一页</button></div>
-</section>
-<footer>MOCR · 复用 OPV-DB 静态数据浏览架构 · <a href="https://sunyrain.github.io/OPV2D/">OPV 数据库 ↗</a><br>来源归属原作者与出版方；使用数据时请引用对应论文，并说明模型提取与筛选条件。</footer>
-</main>
-<dialog id="detail"><div class="dialog-top"><h2 id="detailTitle">记录详情</h2><button id="close" class="btn" aria-label="关闭详情">关闭 ✕</button></div><div id="detailBody"></div></dialog>
+<header class="site-header"><div class="header-inner">
+<div><h1>MOCR 金属氧簇光刻胶数据集</h1><p class="subtitle">Metal-oxo cluster & organic-ligand photoresists · 文献提取的材料、曝光条件与性能数据。</p></div>
+<div class="header-actions"><a class="btn" href="https://github.com/sunyrain/MOCR" target="_blank" rel="noopener">GitHub</a><button class="btn" id="downloadJson" type="button">JSON</button><button class="btn" id="downloadSqlite" type="button">SQLite</button></div>
+</div></header>
+<main class="wrap">
+<section class="release-strip"><div><div class="release-title">MOCR 全文提取数据浏览器</div><div class="release-note">保留原始单位、性能定义和文献对照。模型提取结果尚未独立科学复核；跨论文材料未去重。</div><div class="release-id">mocr_20261010 · 231 papers · <a href="data/dictionary.json">数据字典</a></div></div><div><span class="pill blue">2026.10.10 · Static JSON</span></div></section>
+<div class="loading" id="loadingPanel" role="status">正在加载 MOCR 数据…</div>
+<div id="app" hidden>
+<section class="stats-grid" id="stats" aria-label="数据规模"></section>
+<section class="panel"><div class="panel-header"><h2 class="panel-title">筛选</h2><div class="header-actions"><button class="btn btn-secondary" id="export" type="button" disabled>筛选结果 JSON</button><button class="btn" id="reset" type="button">清除</button></div></div>
+<div class="panel-body"><div class="toolbar">
+<div class="field"><label for="search">关键词</label><input id="search" type="search" placeholder="DOI、材料、配体、化学式、论文标题"></div>
+<div class="field"><label for="tableSelect">数据表</label><select id="tableSelect"><option value="records">光刻性能</option><option value="properties">材料性质</option><option value="materials">材料</option><option value="papers">论文</option><option value="missing_fulltext">未获取全文</option></select></div>
+<div class="field"><label for="scope">论文范围</label><select id="scope"><option value="">全部范围</option><option value="direct_metal_oxo_resist">直接相关</option><option value="related_resist">相邻领域</option><option value="review">综述</option><option value="out_of_scope">范围外</option></select></div>
+<div class="field"><label for="origin">数据来源</label><select id="origin"><option value="">全部来源</option><option value="study_experiment">本研究</option><option value="literature_comparison">文献对照</option><option value="uncertain">来源不明</option></select></div>
+<div class="field"><label for="exposure">曝光方式</label><select id="exposure"><option value="">全部方式</option></select></div>
+<div class="field"><label for="year">年份</label><select id="year"><option value="">全部年份</option></select></div>
+<div class="field"><label for="sort">排序</label><select id="sort"><option value="year-desc">年份：新到旧</option><option value="year-asc">年份：旧到新</option><option value="title">论文标题</option></select></div>
+<button class="btn btn-primary" id="apply" type="button">应用</button>
+</div></div></section>
+<section class="summary-grid"><div class="panel"><div class="panel-header"><h2 class="panel-title">论文范围</h2></div><div class="panel-body" id="scopeBars"></div></div><div class="panel"><div class="panel-header"><h2 class="panel-title">性能字段覆盖</h2></div><div class="panel-body" id="qualityBars"></div></div></section>
+<section class="panel"><div class="panel-header"><h2 class="panel-title" id="tableTitle">光刻性能</h2><span class="pill" id="count" role="status">0 条记录</span></div>
+<div class="table-wrap"><table aria-label="MOCR 数据记录"><thead id="head"></thead><tbody id="rows"></tbody></table></div>
+<div class="status-line"><span id="pageStatus">第 1 页</span><div class="pagination" id="pagination"></div></div></section>
+</div></main>
+<dialog class="modal" id="detail" aria-labelledby="detailTitle"><div class="modal-header"><h3 class="modal-title" id="detailTitle">记录详情</h3><button class="btn" id="close" type="button">关闭</button></div><div class="modal-body" id="detailBody"></div></dialog>
+<footer class="footer">MOCR 静态数据浏览器 · <a href="https://sunyrain.github.io/OPV2D/">OPV 数据库</a><br>点击记录查看条件、来源页码与覆盖限制；空白不等于原文未报告。论文全文与图像不在本站分发。<br><span id="quality"></span></footer>
 </body></html>
