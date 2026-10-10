@@ -76,15 +76,11 @@ function showDetail(index) {
  const related = references(row);
  const warnings = data.review_queue.filter(x=>x.paper_id===row.paper_id && (!x.record_id || x.record_id===row.record_id));
  const issues = data.coverage_issues.filter(x=>x.paper_id===row.paper_id);
- const card=(label,value,wide=false,raw=false)=>`<div class="detail-card${wide?' wide':''}"><div class="detail-label">${escapeHTML(label)}</div><div class="detail-value">${raw?value:escapeHTML(value)}</div></div>`;
- $('detailBody').innerHTML = '<div class="detail-grid">'+card('论文',p.title,true)+card('DOI',doiLink(p.doi),true,true)
-  +(row.excluded_non_article?card('丛书条目','不能定位具体论文，已从论文下载队列排除。',true):'')
-  +(table==='missing_fulltext'?card('获取状态说明','这些是最后一次尝试的状态，不代表论文永久无法获取。',true):'')
-  +warnings.map(w=>card('需要复核',pill(w.issue,'red')+'<br>'+escapeHTML(w.action),true,true)).join('')
-  +Object.entries(row).map(([key,value])=>{const text=typeof value==='object'?JSON.stringify(value,null,2):String(value);return card(key,text,text.length>90||key==='source_blocks');}).join('')
-  +(related.length?card('关联材料',JSON.stringify(related,null,2),true):'')
-  +(row.source_blocks?card('来源定位','MAIN 为正文，SI 为补充材料；p 为页码，b 为解析块编号。请通过 DOI 访问原文核验。',true):'')
-  +'</div>'+`<details class="detail-section"><summary>该论文的覆盖限制（${issues.length} 项）</summary><div class="detail-grid">${issues.map(x=>card(x.field,x.reason+'\n'+(x.note||''),true)).join('')}</div></details>`;
+ $('detailBody').innerHTML = MOCRDetails.render({row,paper:p,table,related,warnings,issues,paperCounts:table==='papers'?{
+  records:data.records.filter(r=>r.paper_id===row.paper_id).length,
+  properties:data.properties.filter(r=>r.paper_id===row.paper_id).length,
+  materials:data.materials.filter(r=>r.paper_id===row.paper_id).length
+ }:{}});
  $('detail').showModal(); $('close').focus();
 }
 function setTable(next) {

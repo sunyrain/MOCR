@@ -1,16 +1,58 @@
 /* MOCR-only semantics. Shared visual rules are copied unchanged into style.css. */
 dialog.modal { padding: 0; color: var(--text); }
 dialog.modal::backdrop { background: rgba(17, 24, 39, 0.48); }
+.modal-title { min-width: 0; overflow-wrap: anywhere; }
+.modal-header .btn { flex-shrink: 0; }
 button:disabled { opacity: 0.45; cursor: default; }
 tbody tr[data-index] { cursor: pointer; }
 tbody tr:focus-visible, th:focus-visible, button:focus-visible, a:focus-visible, summary:focus-visible {
   outline: 2px solid var(--blue); outline-offset: -2px;
 }
 .detail-value { white-space: pre-wrap; }
-.detail-section { margin-top: 10px; }
-.detail-section summary { cursor: pointer; }
+.detail-muted, .record-citation, .metric-definition { color: var(--muted); font-size: 12px; }
+.record-intro { padding-bottom: 16px; border-bottom: 1px solid var(--border); }
+.record-paper-title { margin: 0 0 7px; font-size: 14px; font-weight: 650; }
+.record-citation { overflow-wrap: anywhere; }
+.record-badges, .source-chips { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 9px; }
+.record-section { margin-top: 20px; }
+.record-section-title { margin: 0 0 9px; font-size: 14px; font-weight: 760; }
+.section-note { margin: -2px 0 10px; }
+.metric-card { border-top: 3px solid var(--teal); }
+.metric-value { font-size: 16px; font-weight: 650; line-height: 1.5; }
+.metric-definition { margin-top: 5px; font-weight: 400; }
+.detail-facts { margin: 0; border: 1px solid var(--border); border-radius: 7px; overflow: hidden; }
+.detail-fact { display: grid; grid-template-columns: 155px minmax(0,1fr); }
+.detail-fact + .detail-fact { border-top: 1px solid var(--border); }
+.detail-fact dt { margin: 0; padding: 10px 12px; background: var(--panel-2); color: var(--muted); font-size: 12px; font-weight: 650; }
+.detail-fact dd { margin: 0; padding: 10px 12px; font-size: 12.5px; overflow-wrap: anywhere; min-width: 0; white-space: pre-wrap; }
+.detail-fact dd .detail-facts { border: 0; border-radius: 0; }
+.detail-fact dd .detail-fact { grid-template-columns: 115px minmax(0,1fr); }
+.detail-fact dd .detail-fact dt { background: transparent; }
+.detail-fact .source-chips { margin-top: 0; white-space: normal; }
+.detail-list { margin: 0; padding-left: 18px; white-space: normal; }
+.detail-list li + li { margin-top: 5px; }
+.material-card { border: 1px solid var(--border); border-radius: var(--radius); padding: 12px; margin-top: 10px; }
+.material-card-heading { display: flex; align-items: center; flex-wrap: wrap; gap: 8px; margin-bottom: 10px; }
+.material-card h5 { margin: 0; font-size: 14px; font-weight: 750; min-width: 0; overflow-wrap: anywhere; max-width: 100%; }
+.detail-disclosure { margin-top: 14px; border-top: 1px solid var(--border); padding-top: 12px; }
+.detail-disclosure summary { cursor: pointer; color: var(--blue); font-size: 12px; font-weight: 650; }
+.detail-disclosure[open] > summary { margin-bottom: 10px; }
+.coverage-list article { padding: 10px 0; border-bottom: 1px solid var(--border); }
+.coverage-list h5 { margin: 0; font-size: 12px; overflow-wrap: anywhere; }
+.coverage-list p { margin: 5px 0; font-size: 12px; overflow-wrap: anywhere; }
+.record-warning { margin-top: 14px; padding: 12px; border: 1px solid #f0d2a8; background: #fff6e9; border-radius: 7px; font-size: 12px; }
+.record-warning p { margin: 6px 0 0; }
+.field-guide table { white-space: normal; }
+.field-guide th { cursor: default; }
+.field-guide td { max-width: none; overflow-wrap: anywhere; }
+.field-guide code { font-size: 11px; color: var(--muted); }
+.field-table-scroll { overflow: auto; }
+.field-guide table { min-width: 640px; }
 /* Keep the localized pagination labels intact on narrow screens. */
 @media (max-width: 720px) {
   .status-line, .pagination { flex-wrap: wrap; }
   .pagination button { white-space: nowrap; }
+  .detail-fact, .detail-fact dd .detail-fact { grid-template-columns: 1fr; }
+  .detail-fact dt { padding-bottom: 5px; }
+  .detail-fact dd { padding-top: 6px; }
 }

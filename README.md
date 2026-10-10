@@ -18,7 +18,7 @@ The paper set also contains 20 related papers, 15 reviews and 61 out-of-scope pa
 
 ## Using the data
 
-Use the search, scope, origin, exposure and year filters; select a record to inspect all reported conditions, material associations, source block/page identifiers and coverage limitations. Download the filtered JSON, the full `data/mocr.json`, individual JSONL tables or `data/mocr.sqlite`.
+Use the search, scope, origin, exposure and year filters; select a record to inspect grouped performance cards, labelled process conditions and associated material cards. Source block/page identifiers and coverage limitations are available in expandable sections. The detail view preserves original scientific values without displaying serialized JSON. [Field guide and coverage](https://sunyrain.github.io/MOCR/fields.html) describes every public table and nested process field. Download the filtered JSON, the full `data/mocr.json`, individual JSONL tables or `data/mocr.sqlite`.
 
 SQLite views `direct_study_records` and `direct_study_properties` select original-study rows in model-classified direct-scope papers. They are not independently validated quantitative benchmarks. Keep dose definitions, size definitions, exposure conditions and units together. A flagged dose requires source review before numerical comparison. Materials have not been deduplicated across papers.
 
@@ -38,7 +38,7 @@ Open http://localhost:8000/. No dependencies or build step are required for the 
 
 ## OPV visual theme
 
-`style.css` is an unchanged copy of the style block in the reference `OPV/sites/performance-database/index.html`. Header, release banner, six colored statistic cards, filters, summary bars, compact table, pagination and detail cards use the same classes and layout. Keep shared colors, typography, spacing and responsive breakpoints in this stylesheet; `mocr.css` only adapts the native dialog, keyboard focus, multiline record details and wrapping of localized pagination labels.
+`style.css` is an unchanged copy of the style block in the reference `OPV/sites/performance-database/index.html`. Header, release banner, six colored statistic cards, filters, summary bars, compact table and pagination use the same classes and layout. `mocr.css` adds grouped detail views, the field guide, native dialog and keyboard adaptations using the same theme variables.
 
 To synchronize from the local OPV reference, run from this repository:
 
@@ -55,3 +55,5 @@ python scripts/build_data.py --dataset-dir /path/to/MOCR/data/exports/final_data
 ```
 
 The exporter uses explicit field allowlists. The source dataset is not included in this repository. GitHub Pages serves the root of the `main` branch.
+
+After updating the public data, regenerate the readable field guide with `node scripts/build_field_guide.js`. Node is only required for this optional generation step; the published site remains static.
