@@ -1,0 +1,140 @@
+{
+  "tables": {
+    "papers": {
+      "rows": 231,
+      "columns": [
+        "paper_id",
+        "doi",
+        "title",
+        "year",
+        "journal",
+        "authors",
+        "screening_tier",
+        "scope",
+        "scope_note",
+        "review_status"
+      ]
+    },
+    "materials": {
+      "rows": 965,
+      "columns": [
+        "material_id",
+        "paper_id",
+        "name",
+        "metal",
+        "ligands",
+        "formula",
+        "structure_status",
+        "source_blocks"
+      ]
+    },
+    "records": {
+      "rows": 2180,
+      "columns": [
+        "record_id",
+        "paper_id",
+        "row_index",
+        "material",
+        "dose",
+        "size",
+        "contrast",
+        "LER",
+        "LWR",
+        "film_thickness",
+        "PAB",
+        "PEB",
+        "developer",
+        "notes",
+        "exposure",
+        "tone",
+        "dose_kind",
+        "size_kind",
+        "source_blocks",
+        "pattern_type",
+        "pattern_quality",
+        "film_thickness_after",
+        "thickness_loss",
+        "substrate",
+        "roughness_definition",
+        "data_origin",
+        "exposure_conditions",
+        "formulation",
+        "unit_review_required"
+      ]
+    },
+    "properties": {
+      "rows": 1571,
+      "columns": [
+        "property_id",
+        "paper_id",
+        "row_index",
+        "material",
+        "metric",
+        "value",
+        "conditions",
+        "basis",
+        "method",
+        "source_blocks",
+        "data_origin"
+      ]
+    },
+    "record_materials": {
+      "rows": 2210,
+      "columns": [
+        "record_id",
+        "material_id"
+      ]
+    },
+    "property_materials": {
+      "rows": 1691,
+      "columns": [
+        "property_id",
+        "material_id"
+      ]
+    },
+    "evidence": {
+      "rows": 2814,
+      "columns": [
+        "paper_id",
+        "block_id"
+      ]
+    },
+    "coverage_issues": {
+      "rows": 1598,
+      "columns": [
+        "paper_id",
+        "field",
+        "reason",
+        "note"
+      ]
+    },
+    "review_queue": {
+      "rows": 1,
+      "columns": [
+        "paper_id",
+        "record_id",
+        "issue",
+        "action",
+        "category"
+      ]
+    },
+    "missing_fulltext": {
+      "rows": 43,
+      "columns": [
+        "paper_id",
+        "doi",
+        "title",
+        "year",
+        "journal",
+        "screening_tier",
+        "acquisition_status",
+        "excluded_non_article"
+      ]
+    }
+  },
+  "joins": "paper_id joins to papers. source_blocks join to evidence on paper_id + block_id. Material groups join through record_materials/property_materials.",
+  "missing_values": "Missing fields are not zero and do not establish absence in the original paper. Read coverage_issues.",
+  "row_index": "One-based position in the paper extraction.",
+  "numbers": "Original strings retain units, dose_kind, size_kind and experimental conditions; no unit conversions.",
+  "rights": "Original papers remain subject to their publishers/authors rights. Consult the linked DOI for the source. No new license for underlying source publications is asserted."
+}

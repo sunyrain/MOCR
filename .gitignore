@@ -1,0 +1,6 @@
+__pycache__/
+*.pyc
+*.build.sqlite
+.env*
+node_modules/
+test-results/
