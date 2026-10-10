@@ -4,7 +4,8 @@
 <meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>MOCR Literature-Mined Photoresist Database</title>
 <link rel="stylesheet" href="style.css?v=opv-20261010"><link rel="stylesheet" href="mocr.css?v=details-20261010">
-<script src="details.js?v=details-20261010" defer></script><script src="app.js?v=details-20261010" defer></script>
+<link rel="stylesheet" href="charts.css?v=coverage-20261010">
+<script src="details.js?v=details-20261010" defer></script><script src="vendor/echarts/echarts.min.js" defer></script><script src="coverage.js?v=coverage-20261010" defer></script><script src="app.js?v=coverage-20261010" defer></script>
 </head>
 <body>
 <header class="site-header"><div class="header-inner">
@@ -12,7 +13,7 @@
 <div class="header-actions"><a class="btn" href="https://github.com/sunyrain/MOCR" target="_blank" rel="noopener">GitHub</a><button class="btn" id="downloadJson" type="button">JSON</button><button class="btn" id="downloadSqlite" type="button">SQLite</button></div>
 </div></header>
 <main class="wrap">
-<section class="release-strip"><div><div class="release-title">MOCR 全文提取数据浏览器</div><div class="release-note">保留原始单位、性能定义和文献对照。模型提取结果尚未独立科学复核；跨论文材料未去重。</div><div class="release-id">mocr_20261010 · 231 papers · <a href="fields.html">字段说明与覆盖情况</a></div></div><div><span class="pill blue">2026.10.10 · Static JSON</span></div></section>
+<section class="release-strip"><div><div class="release-title">MOCR 全文提取数据浏览器</div><div class="release-note">保留原始单位、性能定义和文献对照。模型提取结果尚未独立科学复核；跨论文材料未去重。</div><div class="release-id">mocr_20261010 · 231 papers</div></div><a class="coverage-entry" href="fields.html"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 20V4m0 16h16M8 16v-4m5 4V7m5 9v-7"/></svg><span><strong>字段与覆盖分析</strong><small>交互图表 · 字段字典</small></span><svg class="entry-arrow" viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12h14m-5-5 5 5-5 5"/></svg></a></section>
 <div class="loading" id="loadingPanel" role="status">正在加载 MOCR 数据…</div>
 <div id="app" hidden>
 <section class="stats-grid" id="stats" aria-label="数据规模"></section>
@@ -27,8 +28,9 @@
 <div class="field"><label for="sort">排序</label><select id="sort"><option value="year-desc">年份：新到旧</option><option value="year-asc">年份：旧到新</option><option value="title">论文标题</option></select></div>
 <button class="btn btn-primary" id="apply" type="button">应用</button>
 </div></div></section>
-<section class="summary-grid"><div class="panel"><div class="panel-header"><h2 class="panel-title">论文范围</h2></div><div class="panel-body" id="scopeBars"></div></div><div class="panel"><div class="panel-header"><h2 class="panel-title">性能字段覆盖</h2></div><div class="panel-body" id="qualityBars"></div></div></section>
+<section class="summary-grid analytics-grid"><div class="panel"><div class="panel-header analysis-header"><div><h2 class="panel-title">论文范围</h2><p>文献构成与范围筛选</p></div><span class="pill">全部文献</span></div><div class="panel-body scope-overview" id="scopeOverview"></div></div><div class="panel"><div class="panel-header analysis-header"><div><h2 class="panel-title">字段覆盖分析</h2><p>跟随上方数据表与筛选条件更新</p></div><a class="analysis-link" href="fields.html">完整分析 ↗</a></div><div id="coverageExplorer"></div></div></section>
 <section class="panel"><div class="panel-header"><h2 class="panel-title" id="tableTitle">光刻性能</h2><span class="pill" id="count" role="status">0 条记录</span></div>
+<div class="active-chart-filter" id="coverageFilter" hidden><span id="coverageFilterLabel"></span><button type="button" id="clearCoverageFilter">清除图表筛选</button></div>
 <div class="table-wrap"><table aria-label="MOCR 数据记录"><thead id="head"></thead><tbody id="rows"></tbody></table></div>
 <div class="status-line"><span id="pageStatus">第 1 页</span><div class="pagination" id="pagination"></div></div></section>
 </div></main>

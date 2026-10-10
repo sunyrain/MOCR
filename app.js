@@ -14,6 +14,7 @@ const columns = {
 let data, papers, materials, filtered = [], table = 'records', page = 1;
 const PER_PAGE = 100;
 let columnSort = null;
+let coverageWidget, scopeWidget, chartSelection = null;
 const scopeColors = {direct_metal_oxo_resist:'green',related_resist:'blue',review:'purple',out_of_scope:'amber',uncertain:'red'};
 function pill(label, color='') { return `<span class="pill ${color}">${escapeHTML(label)}</span>`; }
 function paperOf(row) { return papers[row.paper_id] || row; }
@@ -31,7 +32,7 @@ function valueHTML(key, value) {
 function filterRows(resetPage = true) {
  if (!data) return;
  const query = $('search').value.trim().toLowerCase();
- filtered = data[table].filter(row => {
+ const candidates = data[table].filter(row => {
   const p = paperOf(row);
   return (!$('scope').value || p.scope === $('scope').value)
    && (!$('origin').value || row.data_origin === $('origin').value)
@@ -39,6 +40,13 @@ function filterRows(resetPage = true) {
    && (!$('year').value || String(p.year) === $('year').value)
    && (!query || [JSON.stringify(row), p.title, p.doi, JSON.stringify(references(row))].join(' ').toLowerCase().includes(query));
  });
+ const activeFilters=['scope','origin','exposure','year'].filter(id=>$(id).value).map(id=>$(id).selectedOptions[0].textContent);
+ if(query) activeFilters.push('关键词筛选');
+ coverageWidget?.update({table,rows:candidates,context:activeFilters.join(' · ')||'全部数据'});
+ scopeWidget?.select($('scope').value);
+ filtered=chartSelection?candidates.filter(row=>MOCRCoverage.matches(row,chartSelection,papers)):candidates;
+ $('coverageFilter').hidden=!chartSelection;
+ if(chartSelection) $('coverageFilterLabel').textContent=`${chartSelection.label} · ${chartSelection.presence==='missing'?'未记录':'已有值'}${chartSelection.group?' · '+chartSelection.group.label:''} · 图表分母仍为筛选前的 ${candidates.length.toLocaleString()} 条`;
  filtered.sort((a,b) => {
   if ($('sort').value==='column' && columnSort) {
    const get = r => ['scope','doi','year'].includes(columnSort.key) ? paperOf(r)[columnSort.key] : r[columnSort.key];
@@ -85,6 +93,7 @@ function showDetail(index) {
 }
 function setTable(next) {
  table = next;
+ chartSelection=null;
  $('tableSelect').value=table;
  if ($('sort').value==='column') $('sort').value='year-desc';
  columnSort=null;$('sort').querySelector('[value="column"]')?.remove();
@@ -98,19 +107,29 @@ async function load() {
   const response = await fetch('data/mocr.json');if(!response.ok)throw new Error(`HTTP ${response.status}`);
   data=await response.json();papers=Object.fromEntries(data.papers.map(r=>[r.paper_id,r]));materials=Object.fromEntries(data.materials.map(r=>[r.material_id,r]));
   $('stats').innerHTML = [['已提取论文',data.papers.length,'全文来源','blue'],['直接相关论文',data.papers.filter(p=>p.scope==='direct_metal_oxo_resist').length,'模型范围分类','teal'],['性能记录',data.records.length,'曝光、剂量与图形化结果','green'],['性质记录',data.properties.length,'结构、物性与表征','purple'],['论文内材料条目',data.materials.length,'尚未跨论文去重','amber'],['待核对单位',data.review_queue.filter(r=>r.category==='unit_conflict').length,'保留原文冲突并标注','gray']].map(([label,n,sub,color])=>`<div class="stat ${color}"><div class="label">${label}</div><div class="value">${n.toLocaleString()}</div><div class="sub">${sub}</div></div>`).join('');
-  const bar=(label,n,total,color='')=>`<div class="bar-row"><div class="bar-label">${label}</div><div class="bar-track"><div class="bar-fill ${color}" style="width:${total?n/total*100:0}%"></div></div><div class="bar-value">${n.toLocaleString()}</div></div>`;
-  $('scopeBars').innerHTML=bar('全部提取论文',data.papers.length,data.papers.length)+Object.entries(scopes).map(([scope,label])=>bar(label,data.papers.filter(r=>r.scope===scope).length,data.papers.length,scopeColors[scope])).join('');
-  $('qualityBars').innerHTML=[['dose','报告剂量','green'],['size','报告尺寸','teal'],['contrast','对比度','purple'],['LER','LER','amber'],['LWR','LWR','green'],['film_thickness','膜厚','teal']].map(([key,label,color])=>bar(label,data.records.filter(r=>r[key]).length,data.records.length,color)).join('');
   const excluded=data.missing_fulltext.filter(r=>r.excluded_non_article).length;
   $('quality').textContent=`另有 ${data.missing_fulltext.length} 条未获取全文，其中 ${excluded} 条为不可唯一识别的丛书条目。具体覆盖限制和单位疑点在记录详情中标注。`;
   $('exposure').innerHTML += [...new Set(data.records.map(r=>r.exposure))].sort().map(v=>`<option>${escapeHTML(v)}</option>`).join('');
   $('year').innerHTML += [...new Set([...data.papers,...data.missing_fulltext].map(r=>r.year).filter(Boolean))].sort((a,b)=>b-a).map(v=>`<option>${v}</option>`).join('');
-  $('loadingPanel').hidden=true;$('app').hidden=false;filterRows();
+  $('loadingPanel').hidden=true;$('app').hidden=false;
+  coverageWidget=MOCRCoverage.mount($('coverageExplorer'),{papers,onFilter:selection=>{chartSelection=selection;filterRows();$('tableTitle').scrollIntoView({behavior:'smooth',block:'start'});}});
+  scopeWidget=MOCRCoverage.mountScope($('scopeOverview'),data.papers,scope=>{if(table==='missing_fulltext')setTable('papers');$('scope').value=scope;chartSelection=null;filterRows();});
+  const params=new URLSearchParams(location.search);
+  for(const id of ['scope','origin','exposure','year']) if([...$(id).options].some(option=>option.value===params.get(id))) $(id).value=params.get(id);
+  if(params.has('search'))$('search').value=params.get('search');
+  setTable(Object.hasOwn(titles,params.get('table'))?params.get('table'):'records');
+  const field=MOCRCoverage.fieldList(table,'all').find(field=>field.key===params.get('field'));
+  if(field) {
+   const dimension=params.get('groupDimension'),value=params.get('groupValue');
+   chartSelection={...field,presence:params.get('presence')==='missing'?'missing':'present',group:['exposure','scope','year'].includes(dimension)&&value?{dimension,value,label:scopes[value]||value}:null};
+   filterRows();$('tableTitle').scrollIntoView({block:'start'});
+  }
  } catch(error) { $('loadingPanel').textContent=`数据加载失败：${error.message}。请刷新重试，或通过本地 HTTP 服务打开本站。`;$('loadingPanel').classList.add('error'); }
 }
 $('tableSelect').addEventListener('change',()=>setTable($('tableSelect').value));
 for(const id of ['search','scope','origin','exposure','year','sort'])$(id).addEventListener(id==='search'?'input':'change',()=>filterRows());
-$('reset').addEventListener('click',()=>{for(const id of ['search','scope','origin','exposure','year'])$(id).value='';filterRows();});
+$('reset').addEventListener('click',()=>{for(const id of ['search','scope','origin','exposure','year'])$(id).value='';chartSelection=null;filterRows();});
+$('clearCoverageFilter').addEventListener('click',()=>{chartSelection=null;filterRows();});
 $('apply').addEventListener('click',()=>filterRows());
 $('pagination').addEventListener('click',event=>{const button=event.target.closest('[data-page]');if(button&&!button.disabled){page=Number(button.dataset.page);render();}});
 function openRow(event) { if(event.target.closest('a'))return;const row=event.target.closest('[data-index]');if(row)showDetail(Number(row.dataset.index)); }
@@ -130,7 +149,7 @@ for (const [id,file] of [['downloadJson','mocr.json'],['downloadSqlite','mocr.sq
 });
 $('export').addEventListener('click',()=>{
  const ids=new Set(filtered.map(r=>r.paper_id));
- const output={release:data.release,table,filters:Object.fromEntries(['search','scope','origin','exposure','year'].map(id=>[id,$(id).value])),rows:filtered,papers:data.papers.filter(p=>ids.has(p.paper_id)),materials:data.materials.filter(p=>ids.has(p.paper_id)),coverage_issues:data.coverage_issues.filter(p=>ids.has(p.paper_id)),review_queue:data.review_queue.filter(p=>ids.has(p.paper_id))};
+ const output={release:data.release,table,filters:{...Object.fromEntries(['search','scope','origin','exposure','year'].map(id=>[id,$(id).value])),coverage:chartSelection?{field:chartSelection.key,presence:chartSelection.presence,group:chartSelection.group}:null},rows:filtered,papers:data.papers.filter(p=>ids.has(p.paper_id)),materials:data.materials.filter(p=>ids.has(p.paper_id)),coverage_issues:data.coverage_issues.filter(p=>ids.has(p.paper_id)),review_queue:data.review_queue.filter(p=>ids.has(p.paper_id))};
  const url=URL.createObjectURL(new Blob([JSON.stringify(output,null,2)],{type:'application/json'}));
  const a=document.createElement('a');a.href=url;a.download=`mocr_${table}_filtered.json`;a.click();setTimeout(()=>URL.revokeObjectURL(url),1000);
 });
