@@ -6,11 +6,11 @@ const origins={study_experiment:'本研究',literature_comparison:'文献对照'
 const titles={records:'光刻性能',properties:'材料性质',materials:'材料',papers:'论文',missing_fulltext:'未获取全文'};
 // Column widths total 100%; grouped cells keep the scientific fields visible.
 const columns={
- records:[['citation','文献',22,'year'],['material','材料 / 曝光',22,'material'],['dose','剂量',16,'dose'],['size','尺寸',14,'size'],['roughness','粗糙度',12,'LER'],['contrast','对比度',8,'contrast'],['actions','',6]],
- properties:[['citation','文献',23,'year'],['material','材料',23,'material'],['metric','性质',18,'metric'],['value','报告数值',21,'value'],['basis','数据基础',9,'basis'],['actions','',6]],
- materials:[['citation','文献',22,'year'],['name','材料',21,'name'],['metal','金属',8,'metal'],['formula','化学式',18,'formula'],['ligands','配体',17,'ligands'],['structure_status','结构确定性',8,'structure_status'],['actions','',6]],
- papers:[['citation','文献',24,'year'],['title','论文标题',45,'title'],['journal','期刊',25,'journal'],['actions','',6]],
- missing_fulltext:[['citation','文献',24,'year'],['title','论文标题',39,'title'],['screening_tier','初筛分组',12,'screening_tier'],['acquisition_status','获取状态',19,'acquisition_status'],['actions','',6]]
+ records:[['citation','文献',18,'year'],['material','材料 / 曝光',18,'material'],['dose','剂量',18,'dose'],['size','尺寸',16,'size'],['roughness','粗糙度',15,'LER'],['contrast','对比度',9,'contrast'],['actions','',6]],
+ properties:[['citation','文献',20,'year'],['material','材料',20,'material'],['metric','性质',16,'metric'],['value','报告数值',28,'value'],['basis','数据基础',10,'basis'],['actions','',6]],
+ materials:[['citation','文献',18,'year'],['name','材料',21,'name'],['metal','金属',6,'metal'],['formula','化学式',19,'formula'],['ligands','配体',20,'ligands'],['structure_status','结构确定性',10,'structure_status'],['actions','',6]],
+ papers:[['citation','文献',20,'year'],['title','论文标题',48,'title'],['journal','期刊',26,'journal'],['actions','',6]],
+ missing_fulltext:[['citation','文献',20,'year'],['title','论文标题',40,'title'],['screening_tier','初筛分组',10,'screening_tier'],['acquisition_status','获取状态',24,'acquisition_status'],['actions','',6]]
 };
 const data=MOCRData.data;
 let meta,papers,filtered=[],table='records',page=1,columnSort=null;
@@ -18,7 +18,7 @@ let coverageWidget,scopeWidget,chartSelection=null,tableEpoch=0,filterEpoch=0,de
 const scopeColors={direct_metal_oxo_resist:'green',related_resist:'blue',review:'purple',out_of_scope:'amber',uncertain:'red'};
 function pill(label,color=''){return `<span class="pill ${color}">${escapeHTML(label)}</span>`;}
 function paperOf(row){return papers[row.paper_id]||row;}
-function doiLink(doi){return doi?`<a class="citation-doi" href="https://doi.org/${encodeURIComponent(doi)}" target="_blank" rel="noopener">${escapeHTML(doi)}</a>`:'<span class="detail-muted">暂无 DOI</span>';}
+function doiLink(doi){return doi?`<a class="citation-doi" href="https://doi.org/${encodeURIComponent(doi)}" title="${escapeHTML(doi)}" target="_blank" rel="noopener">${escapeHTML(doi)}</a>`:'<span class="detail-muted">暂无 DOI</span>';}
 function plain(value){return value===null||value===undefined||value===''?'—':Array.isArray(value)?value.join(' · '):String(value);}
 function cellValue(value,extra=''){return `<span class="cell-value ${extra}">${escapeHTML(plain(value))}</span>`;}
 function message(text=''){$('tableMessage').textContent=text;$('tableMessage').hidden=!text;}
@@ -50,11 +50,15 @@ function cellHTML(row,key){
  if(key==='citation')return doiLink(p.doi)+`<div class="cell-meta"><span>${escapeHTML(p.year||'年份未知')}</span>${table==='missing_fulltext'?pill(row.excluded_non_article?'丛书条目':'全文待获取','amber'):pill(scopes[p.scope]||'待确认',scopeColors[p.scope])}</div>`;
  if(key==='actions')return '<button type="button" class="record-open" aria-label="查看完整记录">详情 ↗</button>';
  if(key==='material')return cellValue(row.material,'material-value')+`<div class="cell-meta">${row.exposure?pill(row.exposure==='unknown'?'曝光未明确':row.exposure,'blue'):''}${pill(origins[row.data_origin]||row.data_origin||'来源不明',row.data_origin==='study_experiment'?'green':'purple')}</div>`;
- if(key==='roughness')return ['LER','LWR'].map(k=>`<div class="roughness-value"><small>${k}</small>${cellValue(row[k])}</div>`).join('');
- let html=['basis','structure_status'].includes(key)?`<span class="cell-value">${MOCRDetails.valueHTML(row[key],key)}</span>`:cellValue(row[key],key==='name'?'material-value':'');
+ if(key==='roughness'){
+  const reported=['LER','LWR'].filter(k=>row[k]!==null&&row[k]!==undefined&&String(row[k]).trim()!=='');
+  return reported.length?reported.map(k=>`<div class="roughness-value"><small>${k}</small>${cellValue(row[k])}</div>`).join(''):'<span class="cell-empty">—</span>';
+ }
  const kind=key==='dose'?'dose_kind':key==='size'?'size_kind':null;
- if(kind&&row[kind]&&row[kind]!=='unspecified')html+=`<span class="cell-definition">${MOCRDetails.valueHTML(row[kind],kind)}</span>`;
- if(key==='dose'&&row.unit_review_required)html+=pill('单位待核对','red');
+ const definition=kind&&row[kind]&&row[kind]!=='unspecified'?MOCRDetails.valueHTML(row[kind],kind):'';
+ const warning=key==='dose'&&row.unit_review_required;
+ let html=['basis','structure_status'].includes(key)?`<span class="cell-value">${MOCRDetails.valueHTML(row[key],key)}</span>`:cellValue(row[key],definition||warning?'with-context':'');
+ if(definition||warning)html+=`<div class="cell-definition">${definition?`<span>${definition}</span>`:''}${warning?pill('单位待核对','red'):''}</div>`;
  return html;
 }
 function render(){
