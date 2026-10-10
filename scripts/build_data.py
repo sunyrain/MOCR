@@ -8,6 +8,7 @@ import datetime
 import json
 from pathlib import Path
 import sqlite3
+from build_viewer_meta import build_meta
 
 FIELDS = {
     'papers': 'paper_id doi title year journal authors screening_tier scope scope_note review_status',
@@ -37,6 +38,7 @@ def build(source, output):
         'notice':'Model-extracted data; not independently scientifically validated. Units and definitions remain as reported. Materials are not deduplicated across papers.',
         'evidence_policy':'Source block/page identifiers and DOI links are provided. Publisher full text and page images are not redistributed.'}
     (output/'mocr.json').write_text(json.dumps(payload,ensure_ascii=False,separators=(',',':')),encoding='utf8')
+    build_meta(payload, output)
     (output/'dictionary.json').write_text(json.dumps({'tables':dictionary,
         'joins':'paper_id joins to papers. source_blocks join to evidence on paper_id + block_id. Material groups join through record_materials/property_materials.',
         'missing_values':'Missing fields are not zero and do not establish absence in the original paper. Read coverage_issues.',

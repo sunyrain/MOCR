@@ -5,7 +5,8 @@
 <title>MOCR Literature-Mined Photoresist Database</title>
 <link rel="stylesheet" href="style.css?v=opv-20261010"><link rel="stylesheet" href="mocr.css?v=details-20261010">
 <link rel="stylesheet" href="charts.css?v=coverage-20261010">
-<script src="details.js?v=details-20261010" defer></script><script src="vendor/echarts/echarts.min.js" defer></script><script src="coverage.js?v=coverage-20261010" defer></script><script src="app.js?v=coverage-20261010" defer></script>
+<link rel="stylesheet" href="table.css?v=fast-20261010">
+<script src="data-loader.js?v=fast-20261010" defer></script><script src="details.js?v=details-20261010" defer></script><script src="coverage.js?v=coverage-20261010" defer></script><script src="app.js?v=fast-20261010" defer></script>
 </head>
 <body>
 <header class="site-header"><div class="header-inner">
@@ -28,10 +29,11 @@
 <div class="field"><label for="sort">排序</label><select id="sort"><option value="year-desc">年份：新到旧</option><option value="year-asc">年份：旧到新</option><option value="title">论文标题</option></select></div>
 <button class="btn btn-primary" id="apply" type="button">应用</button>
 </div></div></section>
-<section class="summary-grid analytics-grid"><div class="panel"><div class="panel-header analysis-header"><div><h2 class="panel-title">论文范围</h2><p>文献构成与范围筛选</p></div><span class="pill">全部文献</span></div><div class="panel-body scope-overview" id="scopeOverview"></div></div><div class="panel"><div class="panel-header analysis-header"><div><h2 class="panel-title">字段覆盖分析</h2><p>跟随上方数据表与筛选条件更新</p></div><a class="analysis-link" href="fields.html">完整分析 ↗</a></div><div id="coverageExplorer"></div></div></section>
-<section class="panel"><div class="panel-header"><h2 class="panel-title" id="tableTitle">光刻性能</h2><span class="pill" id="count" role="status">0 条记录</span></div>
+<section class="summary-grid analytics-grid"><div class="panel"><div class="panel-header analysis-header"><div><h2 class="panel-title">论文范围</h2><p>文献构成与范围筛选</p></div><span class="pill">全部文献</span></div><div class="panel-body scope-overview" id="scopeOverview"><p class="chart-placeholder">范围图表正在准备…</p></div></div><div class="panel"><div class="panel-header analysis-header"><div><h2 class="panel-title">字段覆盖分析</h2><p>跟随上方数据表与筛选条件更新</p></div><a class="analysis-link" href="fields.html">完整分析 ↗</a></div><div id="coverageExplorer"><p class="chart-placeholder">图表正在准备，下方记录已可浏览。</p></div></div></section>
+<section class="panel table-panel"><div class="panel-header"><div><h2 class="panel-title" id="tableTitle">光刻性能</h2><p class="table-caption">保留原文单位 · 长内容点击详情查看</p></div><div class="table-tools"><label class="page-size" for="pageSize">每页<select id="pageSize"><option>25</option><option selected>50</option><option>100</option></select></label><span class="pill" id="count" role="status">0 条记录</span></div></div>
+<div id="tableMessage" class="table-message" role="status" hidden></div>
 <div class="active-chart-filter" id="coverageFilter" hidden><span id="coverageFilterLabel"></span><button type="button" id="clearCoverageFilter">清除图表筛选</button></div>
-<div class="table-wrap"><table aria-label="MOCR 数据记录"><thead id="head"></thead><tbody id="rows"></tbody></table></div>
+<div class="table-wrap record-table-wrap"><table class="record-table" id="recordTable" aria-label="MOCR 数据记录"><colgroup id="columnWidths"></colgroup><thead id="head"></thead><tbody id="rows"></tbody></table></div>
 <div class="status-line"><span id="pageStatus">第 1 页</span><div class="pagination" id="pagination"></div></div></section>
 </div></main>
 <dialog class="modal" id="detail" aria-labelledby="detailTitle"><div class="modal-header"><h3 class="modal-title" id="detailTitle">记录详情</h3><button class="btn" id="close" type="button">关闭</button></div><div class="modal-body" id="detailBody"></div></dialog>
