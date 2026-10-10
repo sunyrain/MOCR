@@ -22,7 +22,9 @@ Use the search, scope, origin, exposure and year filters; select a record to ins
 
 The results table fits its container: DOI, year and scope share a citation cell; exposure and origin sit under the material; LER and LWR each use one inline label/value line when reported. If both roughness fields are missing, the cell displays one dash. Previews stay within two lines per cell, with one value line plus one context line where applicable; the complete original values remain in the detail dialog. Compact padding and wider performance columns keep desktop rows near 53 CSS pixels. Narrow layouts use stacked record cards. Choose 25, 50 (default) or 100 records per page.
 
-The coverage explorer offers ranked bars, a grouped heatmap and a keyboard-accessible data table. Select core performance, process or pattern fields; group the heatmap by exposure, scope or year. Hover for counts and denominators, click a field or cell to inspect it, then open its present or missing records. Charts follow the page filters; drilling into records keeps the chart's original denominator so the selection does not inflate coverage. Export the current chart as SVG. Coverage measures non-empty fields, not scientific accuracy or training readiness; missing fields may also be inapplicable. The complete field dictionary below the explorer describes the whole public package and does not change with chart filters.
+The home page focuses on search, filters and records, with one entry to the field guide. Operational statistics and acquisition summaries are not shown on the home page. Record-specific source and unit notes remain in the detail dialog.
+
+The dedicated field guide contains the paper-scope chart and coverage explorer: ranked bars, a grouped heatmap and a keyboard-accessible data table. Select core performance, process or pattern fields; group the heatmap by exposure, scope or year. Hover for counts and denominators, click a field or cell to inspect it, then open its present or missing records on the home page. The resulting field filter can be cleared independently of other filters. Export the current chart as SVG. Coverage measures non-empty fields, not scientific accuracy or training readiness; missing fields may also be inapplicable. The complete field dictionary below the explorer describes the whole public package and does not change with chart filters.
 
 SQLite views `direct_study_records` and `direct_study_properties` select original-study rows in model-classified direct-scope papers. They are not independently validated quantitative benchmarks. Keep dose definitions, size definitions, exposure conditions and units together. A flagged dose requires source review before numerical comparison. Materials have not been deduplicated across papers.
 
@@ -42,7 +44,7 @@ Open http://localhost:8000/. No dependency installation or build step is require
 
 ## OPV visual theme
 
-`style.css` is an unchanged copy of the style block in the reference `OPV/sites/performance-database/index.html`. Header, release banner, six colored statistic cards, filters, compact table and pagination use the same classes and layout. `mocr.css` adds grouped detail views, the field guide, native dialog and keyboard adaptations. `charts.css` styles the analysis entry, interactive charts and record drill-down using the same OPV colors and typography.
+`style.css` is an unchanged copy of the style block in the reference `OPV/sites/performance-database/index.html`. Header, introduction, filters, compact table and pagination retain the OPV theme. `mocr.css` adds grouped detail views, the field guide, native dialog and keyboard adaptations. `charts.css` styles the analysis entry, interactive charts and record drill-down using the same OPV colors and typography.
 
 `table.css` adds fixed wrapping columns and responsive record cards without changing the shared OPV stylesheet.
 
@@ -54,9 +56,9 @@ The modular bundle includes only bar, pie and heatmap charts, SVG rendering, and
 
 The browser loads `viewer-meta.json`, `papers.jsonl` and the selected table concurrently. Other tables load on selection; material links load for search or details; coverage notes load for details or export. Requests and search indexes are cached in memory. Search retains all original row and linked-material fields, with a 160 ms input debounce. The complete JSON and SQLite downloads are unchanged.
 
-For the 2026-10-10 release, initial data decreased from 3,788,132 to 1,884,786 uncompressed bytes. The chart bundle decreased from 1,034,102 to about 564 KB and loads after the table's first render. A local network sample of the old deployment took 3.34 seconds for ECharts and 2.90 seconds for the full JSON; those requests were previously on a sequential blocking path. These are diagnostic samples, not universal page-load benchmarks. GitHub Pages network latency still varies by location and cache state.
+For the 2026-10-10 release, initial data decreased from 3,788,132 to 1,884,786 uncompressed bytes. The chart bundle decreased from 1,034,102 to about 564 KB and now loads only on the field guide page. The home page does not initialize or download ECharts. A local network sample of the old deployment took 3.34 seconds for ECharts and 2.90 seconds for the full JSON; those requests were previously on a sequential blocking path. These are diagnostic samples, not universal page-load benchmarks. GitHub Pages network latency still varies by location and cache state.
 
-Browser console entries `[MOCR] table-ready` and `[MOCR] charts-ready` report navigation and resource timings for verification. `npm test` checks complete row preservation, material-aware search, request caching, and detail/export context.
+The browser console entry `[MOCR] table-ready` reports navigation and resource timings for verification. `npm test` checks complete row preservation, material-aware search, request caching, and detail/export context.
 
 To synchronize from the local OPV reference, run from this repository:
 

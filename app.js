@@ -14,7 +14,7 @@ const columns={
 };
 const data=MOCRData.data;
 let meta,papers,filtered=[],table='records',page=1,columnSort=null;
-let coverageWidget,scopeWidget,chartSelection=null,tableEpoch=0,filterEpoch=0,detailEpoch=0,loadingTable=false,searchTimer;
+let fieldSelection=null,tableEpoch=0,filterEpoch=0,detailEpoch=0,loadingTable=false,searchTimer;
 const scopeColors={direct_metal_oxo_resist:'green',related_resist:'blue',review:'purple',out_of_scope:'amber',uncertain:'red'};
 function pill(label,color=''){return `<span class="pill ${color}">${escapeHTML(label)}</span>`;}
 function paperOf(row){return papers[row.paper_id]||row;}
@@ -23,7 +23,7 @@ function plain(value){return value===null||value===undefined||value===''?'—':A
 function cellValue(value,extra=''){return `<span class="cell-value ${extra}">${escapeHTML(plain(value))}</span>`;}
 function message(text=''){$('tableMessage').textContent=text;$('tableMessage').hidden=!text;}
 function logReady(stage){performance.mark(`mocr-${stage}`);console.info(`[MOCR] ${stage}`,JSON.stringify({navigation_ms:Math.round(performance.now()),resources:performance.getEntriesByType('resource').filter(r=>/\.jsonl|viewer-meta|echarts/.test(r.name)).map(r=>({file:r.name.split('/').pop(),duration_ms:Math.round(r.duration),transfer_bytes:r.transferSize}))}));}
-async function filterRows(resetPage=true,updateCharts=true){
+async function filterRows(resetPage=true){
  const epoch=++filterEpoch;
  if(loadingTable||!data[table])return;
  const activeTable=table,query=$('search').value.trim().toLowerCase();
@@ -33,11 +33,9 @@ async function filterRows(resetPage=true,updateCharts=true){
   if(epoch!==filterEpoch||activeTable!==table)return;
   message();
   const candidates=data[table].filter(row=>{const p=paperOf(row);return (!$('scope').value||p.scope===$('scope').value)&&(!$('origin').value||row.data_origin===$('origin').value)&&(!$('exposure').value||row.exposure===$('exposure').value)&&(!$('year').value||String(p.year)===$('year').value)&&(!query||index.get(row).includes(query));});
-  if(updateCharts){const filters=['scope','origin','exposure','year'].filter(id=>$(id).value).map(id=>$(id).selectedOptions[0].textContent);if(query)filters.push('关键词筛选');coverageWidget?.update({table,rows:candidates,context:filters.join(' · ')||'全部数据'});}
-  scopeWidget?.select($('scope').value);
-  filtered=chartSelection?candidates.filter(row=>MOCRCoverage.matches(row,chartSelection,papers)):candidates;
-  $('coverageFilter').hidden=!chartSelection;
-  if(chartSelection)$('coverageFilterLabel').textContent=`${chartSelection.label} · ${chartSelection.presence==='missing'?'未记录':'已有值'}${chartSelection.group?' · '+chartSelection.group.label:''} · 图表分母仍为筛选前的 ${candidates.length.toLocaleString()} 条`;
+  filtered=fieldSelection?candidates.filter(row=>MOCRCoverage.matches(row,fieldSelection,papers)):candidates;
+  $('coverageFilter').hidden=!fieldSelection;
+  if(fieldSelection)$('coverageFilterLabel').textContent=`字段筛选：${fieldSelection.label} · ${fieldSelection.presence==='missing'?'未记录':'已有值'}${fieldSelection.group?' · '+fieldSelection.group.label:''}`;
   filtered.sort((a,b)=>{
    if($('sort').value==='column'&&columnSort){const get=r=>['scope','doi','year'].includes(columnSort.key)?paperOf(r)[columnSort.key]:r[columnSort.key];return columnSort.direction*(columnSort.key==='year'?(Number(get(a))||0)-(Number(get(b))||0):String(get(a)??'').localeCompare(String(get(b)??'')));}
    return $('sort').value==='title'?String(paperOf(a).title).localeCompare(String(paperOf(b).title)):($('sort').value==='year-asc'?1:-1)*((paperOf(a).year||0)-(paperOf(b).year||0));
@@ -56,9 +54,8 @@ function cellHTML(row,key){
  }
  const kind=key==='dose'?'dose_kind':key==='size'?'size_kind':null;
  const definition=kind&&row[kind]&&row[kind]!=='unspecified'?MOCRDetails.valueHTML(row[kind],kind):'';
- const warning=key==='dose'&&row.unit_review_required;
- let html=['basis','structure_status'].includes(key)?`<span class="cell-value">${MOCRDetails.valueHTML(row[key],key)}</span>`:cellValue(row[key],definition||warning?'with-context':'');
- if(definition||warning)html+=`<div class="cell-definition">${definition?`<span>${definition}</span>`:''}${warning?pill('单位待核对','red'):''}</div>`;
+ let html=['basis','structure_status'].includes(key)?`<span class="cell-value">${MOCRDetails.valueHTML(row[key],key)}</span>`:cellValue(row[key],definition?'with-context':'');
+ if(definition)html+=`<div class="cell-definition"><span>${definition}</span></div>`;
  return html;
 }
 function render(){
@@ -83,51 +80,43 @@ async function showDetail(index){
  }catch(error){if(epoch===detailEpoch)$('detailBody').innerHTML=`<p class="error">详情加载失败：${escapeHTML(error.message)}。关闭后重新打开可重试。</p>`;}
 }
 async function setTable(next){
- const epoch=++tableEpoch;filterEpoch++;table=next;loadingTable=true;chartSelection=null;filtered=[];$('rows').innerHTML='';$('tableTitle').textContent=titles[next];$('count').textContent='正在加载…';$('tableSelect').value=table;$('export').disabled=true;$('recordTable').setAttribute('aria-busy','true');message(`正在加载${titles[next]}…`);
+ const epoch=++tableEpoch;filterEpoch++;table=next;loadingTable=true;fieldSelection=null;filtered=[];$('rows').innerHTML='';$('tableTitle').textContent=titles[next];$('count').textContent='正在加载…';$('tableSelect').value=table;$('export').disabled=true;$('recordTable').setAttribute('aria-busy','true');message(`正在加载${titles[next]}…`);
  if($('sort').value==='column')$('sort').value='year-desc';columnSort=null;$('sort').querySelector('[value="column"]')?.remove();
  for(const [id,enabled] of [['scope',table!=='missing_fulltext'],['origin',['records','properties'].includes(table)],['exposure',table==='records']]){$(id).disabled=!enabled;if(!enabled)$(id).value='';}
  try{await MOCRData.table(next);if(epoch!==tableEpoch)return;loadingTable=false;$('recordTable').removeAttribute('aria-busy');await filterRows();}
  catch(error){if(epoch===tableEpoch){loadingTable=false;$('recordTable').removeAttribute('aria-busy');message(`加载失败：${error.message}。点击“应用”重试。`);}}
 }
-async function initCharts(){
- try{await MOCRData.charts();}catch(error){console.warn('[MOCR]',error.message);}
- coverageWidget=MOCRCoverage.mount($('coverageExplorer'),{papers,onFilter:selection=>{chartSelection=selection;filterRows(true,false);$('tableTitle').scrollIntoView({behavior:'smooth',block:'start'});}});
- scopeWidget=MOCRCoverage.mountScope($('scopeOverview'),data.papers,async scope=>{if(table==='missing_fulltext')await setTable('papers');$('scope').value=scope;chartSelection=null;filterRows();});
- await filterRows(false);logReady('charts-ready');
-}
 async function load(){
  try{
   const params=new URLSearchParams(location.search),initial=Object.hasOwn(titles,params.get('table'))?params.get('table'):'records';
   [meta]=await Promise.all([MOCRData.catalog(),MOCRData.table('papers'),MOCRData.table(initial)]);papers=Object.fromEntries(data.papers.map(r=>[r.paper_id,r]));
-  $('stats').innerHTML=[['已提取论文',meta.counts.papers,'全文来源','blue'],['直接相关论文',data.papers.filter(p=>p.scope==='direct_metal_oxo_resist').length,'模型范围分类','teal'],['性能记录',meta.counts.records,'曝光、剂量与图形化结果','green'],['性质记录',meta.counts.properties,'结构、物性与表征','purple'],['论文内材料条目',meta.counts.materials,'尚未跨论文去重','amber'],['待核对单位',meta.unit_reviews,'保留原文冲突并标注','gray']].map(([label,n,sub,color])=>`<div class="stat ${color}"><div class="label">${label}</div><div class="value">${n.toLocaleString()}</div><div class="sub">${sub}</div></div>`).join('');
-  $('quality').textContent=`另有 ${meta.counts.missing_fulltext} 条未获取全文，其中 ${meta.excluded_non_articles} 条为不可唯一识别的丛书条目。具体覆盖限制和单位疑点在记录详情中标注。`;
   $('exposure').innerHTML+=meta.exposures.map(v=>`<option>${escapeHTML(v)}</option>`).join('');$('year').innerHTML+=meta.years.map(v=>`<option>${v}</option>`).join('');
   for(const id of ['scope','origin','exposure','year'])if([...$(id).options].some(o=>o.value===params.get(id)))$(id).value=params.get(id);
   if(params.has('search'))$('search').value=params.get('search');$('loadingPanel').hidden=true;$('app').hidden=false;
   await setTable(initial);
   const field=MOCRCoverage.fieldList(table,'all').find(f=>f.key===params.get('field'));
-  if(field){const dimension=params.get('groupDimension'),value=params.get('groupValue');chartSelection={...field,presence:params.get('presence')==='missing'?'missing':'present',group:['exposure','scope','year'].includes(dimension)&&value?{dimension,value,label:scopes[value]||value}:null};await filterRows();$('tableTitle').scrollIntoView({block:'start'});}
-  logReady('table-ready');requestAnimationFrame(()=>requestAnimationFrame(initCharts));
+  if(field){const dimension=params.get('groupDimension'),value=params.get('groupValue');fieldSelection={...field,presence:params.get('presence')==='missing'?'missing':'present',group:['exposure','scope','year'].includes(dimension)&&value?{dimension,value,label:scopes[value]||value}:null};await filterRows();$('tableTitle').scrollIntoView({block:'start'});}
+  logReady('table-ready');
  }catch(error){$('loadingPanel').hidden=false;$('loadingPanel').textContent=`数据加载失败：${error.message}。请刷新重试。`;$('loadingPanel').classList.add('error');}
 }
 $('tableSelect').addEventListener('change',()=>setTable($('tableSelect').value));
 $('search').addEventListener('input',()=>{clearTimeout(searchTimer);filterEpoch++;searchTimer=setTimeout(()=>filterRows(),160);});
 for(const id of ['scope','origin','exposure','year'])$(id).addEventListener('change',()=>filterRows());
-$('sort').addEventListener('change',()=>filterRows(true,false));
-$('reset').addEventListener('click',()=>{clearTimeout(searchTimer);for(const id of ['search','scope','origin','exposure','year'])$(id).value='';chartSelection=null;filterRows();});
-$('clearCoverageFilter').addEventListener('click',()=>{chartSelection=null;filterRows(true,false);});
+$('sort').addEventListener('change',()=>filterRows());
+$('reset').addEventListener('click',()=>{clearTimeout(searchTimer);for(const id of ['search','scope','origin','exposure','year'])$(id).value='';fieldSelection=null;filterRows();});
+$('clearCoverageFilter').addEventListener('click',()=>{fieldSelection=null;filterRows();});
 $('apply').addEventListener('click',()=>{clearTimeout(searchTimer);data[table]?filterRows():setTable(table);});
 $('pageSize').addEventListener('change',()=>{if(!loadingTable){page=1;render();}});
 $('pagination').addEventListener('click',event=>{const b=event.target.closest('[data-page]');if(b&&!b.disabled&&!loadingTable){page=Number(b.dataset.page);render();$('recordTable').parentElement.scrollTop=0;}});
 function openRow(event){if(event.target.closest('a'))return;const row=event.target.closest('[data-index]');if(row)showDetail(Number(row.dataset.index));}
 $('rows').addEventListener('click',openRow);
 $('rows').addEventListener('keydown',event=>{if(!event.target.closest('a,button')&&['Enter',' '].includes(event.key)){event.preventDefault();openRow(event);}});
-function sortColumn(event){const h=event.target.closest('[data-sort]');if(!h)return;const key=h.dataset.sort;columnSort={key,direction:columnSort?.key===key?-columnSort.direction:1};let o=$('sort').querySelector('[value="column"]');if(!o){o=document.createElement('option');o.value='column';$('sort').append(o);}o.textContent=(key==='year'?'年份':key==='LER'?'LER':h.textContent)+(columnSort.direction===1?' ↑':' ↓');$('sort').value='column';filterRows(true,false);}
+function sortColumn(event){const h=event.target.closest('[data-sort]');if(!h)return;const key=h.dataset.sort;columnSort={key,direction:columnSort?.key===key?-columnSort.direction:1};let o=$('sort').querySelector('[value="column"]');if(!o){o=document.createElement('option');o.value='column';$('sort').append(o);}o.textContent=(key==='year'?'年份':key==='LER'?'LER':h.textContent)+(columnSort.direction===1?' ↑':' ↓');$('sort').value='column';filterRows();}
 $('head').addEventListener('click',sortColumn);$('head').addEventListener('keydown',e=>{if(['Enter',' '].includes(e.key)){e.preventDefault();sortColumn(e);}});
 $('close').addEventListener('click',()=>$('detail').close());
 for(const [id,file] of [['downloadJson','mocr.json'],['downloadSqlite','mocr.sqlite']])$(id).addEventListener('click',()=>{const a=document.createElement('a');a.href=`data/${file}`;a.download=file;a.click();});
 $('export').addEventListener('click',async()=>{
- const rows=[...filtered],activeTable=table,selection=chartSelection,filters=Object.fromEntries(['search','scope','origin','exposure','year'].map(id=>[id,$(id).value]));$('export').disabled=true;$('export').textContent='准备导出…';
+ const rows=[...filtered],activeTable=table,selection=fieldSelection,filters=Object.fromEntries(['search','scope','origin','exposure','year'].map(id=>[id,$(id).value]));$('export').disabled=true;$('export').textContent='准备导出…';
  try{await MOCRData.exportContext();const ids=new Set(rows.map(r=>r.paper_id));const output={release:data.release,table:activeTable,filters:{...filters,coverage:selection?{field:selection.key,presence:selection.presence,group:selection.group}:null},rows,papers:data.papers.filter(p=>ids.has(p.paper_id)),materials:data.materials.filter(p=>ids.has(p.paper_id)),coverage_issues:data.coverage_issues.filter(p=>ids.has(p.paper_id)),review_queue:data.review_queue.filter(p=>ids.has(p.paper_id))};const url=URL.createObjectURL(new Blob([JSON.stringify(output,null,2)],{type:'application/json'}));const a=document.createElement('a');a.href=url;a.download=`mocr_${activeTable}_filtered.json`;a.click();setTimeout(()=>URL.revokeObjectURL(url),1000);}catch(error){message(`导出失败：${error.message}。请重试。`);}finally{$('export').textContent='筛选结果 JSON';$('export').disabled=!filtered.length;}
 });
 load();

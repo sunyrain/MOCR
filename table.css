@@ -29,7 +29,6 @@
 .page-size select { width: auto; min-height: 28px; padding: 4px 22px 4px 7px; font-size: 11px; }
 .table-message { padding: 10px 16px; color: var(--muted); font-size: 12px; background: var(--panel-2); }
 .table-message[hidden] { display: none; }
-.chart-placeholder { padding: 28px 16px; color: var(--muted); font-size: 12px; }
 @media(max-width:1000px) {
  .record-table-wrap { max-height: none; }
  .record-table, .record-table tbody { display: block; width: 100%; }

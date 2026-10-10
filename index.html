@@ -2,11 +2,11 @@
 <html lang="zh-CN">
 <head>
 <meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>MOCR Literature-Mined Photoresist Database</title>
+<title>MOCR Photoresist Database</title>
 <link rel="stylesheet" href="style.css?v=opv-20261010"><link rel="stylesheet" href="mocr.css?v=details-20261010">
 <link rel="stylesheet" href="charts.css?v=coverage-20261010">
 <link rel="stylesheet" href="table.css?v=compact-20261010">
-<script src="data-loader.js?v=fast-20261010" defer></script><script src="details.js?v=details-20261010" defer></script><script src="coverage.js?v=coverage-20261010" defer></script><script src="app.js?v=compact-20261010" defer></script>
+<script src="data-loader.js?v=fast-20261010" defer></script><script src="details.js?v=details-20261010" defer></script><script src="coverage.js?v=analysis-page-20261010" defer></script><script src="app.js?v=focused-20261010" defer></script>
 </head>
 <body>
 <header class="site-header"><div class="header-inner">
@@ -14,10 +14,9 @@
 <div class="header-actions"><a class="btn" href="https://github.com/sunyrain/MOCR" target="_blank" rel="noopener">GitHub</a><button class="btn" id="downloadJson" type="button">JSON</button><button class="btn" id="downloadSqlite" type="button">SQLite</button></div>
 </div></header>
 <main class="wrap">
-<section class="release-strip"><div><div class="release-title">MOCR 全文提取数据浏览器</div><div class="release-note">保留原始单位、性能定义和文献对照。模型提取结果尚未独立科学复核；跨论文材料未去重。</div><div class="release-id">mocr_20261010 · 231 papers</div></div><a class="coverage-entry" href="fields.html"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 20V4m0 16h16M8 16v-4m5 4V7m5 9v-7"/></svg><span><strong>字段与覆盖分析</strong><small>交互图表 · 字段字典</small></span><svg class="entry-arrow" viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12h14m-5-5 5 5-5 5"/></svg></a></section>
+<section class="release-strip"><div><div class="release-title">材料与光刻性能</div><div class="release-note">按材料、曝光方式和文献筛选，查看性能数值、实验条件与来源。</div></div><a class="coverage-entry" href="fields.html"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 20V4m0 16h16M8 16v-4m5 4V7m5 9v-7"/></svg><span><strong>字段与覆盖分析</strong><small>交互图表 · 字段字典</small></span><svg class="entry-arrow" viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12h14m-5-5 5 5-5 5"/></svg></a></section>
 <div class="loading" id="loadingPanel" role="status">正在加载 MOCR 数据…</div>
 <div id="app" hidden>
-<section class="stats-grid" id="stats" aria-label="数据规模"></section>
 <section class="panel"><div class="panel-header"><h2 class="panel-title">筛选</h2><div class="header-actions"><button class="btn btn-secondary" id="export" type="button" disabled>筛选结果 JSON</button><button class="btn" id="reset" type="button">清除</button></div></div>
 <div class="panel-body"><div class="toolbar">
 <div class="field"><label for="search">关键词</label><input id="search" type="search" placeholder="DOI、材料、配体、化学式、论文标题"></div>
@@ -29,13 +28,12 @@
 <div class="field"><label for="sort">排序</label><select id="sort"><option value="year-desc">年份：新到旧</option><option value="year-asc">年份：旧到新</option><option value="title">论文标题</option></select></div>
 <button class="btn btn-primary" id="apply" type="button">应用</button>
 </div></div></section>
-<section class="summary-grid analytics-grid"><div class="panel"><div class="panel-header analysis-header"><div><h2 class="panel-title">论文范围</h2><p>文献构成与范围筛选</p></div><span class="pill">全部文献</span></div><div class="panel-body scope-overview" id="scopeOverview"><p class="chart-placeholder">范围图表正在准备…</p></div></div><div class="panel"><div class="panel-header analysis-header"><div><h2 class="panel-title">字段覆盖分析</h2><p>跟随上方数据表与筛选条件更新</p></div><a class="analysis-link" href="fields.html">完整分析 ↗</a></div><div id="coverageExplorer"><p class="chart-placeholder">图表正在准备，下方记录已可浏览。</p></div></div></section>
 <section class="panel table-panel"><div class="panel-header"><div><h2 class="panel-title" id="tableTitle">光刻性能</h2><p class="table-caption">保留原文单位 · 长内容点击详情查看</p></div><div class="table-tools"><label class="page-size" for="pageSize">每页<select id="pageSize"><option>25</option><option selected>50</option><option>100</option></select></label><span class="pill" id="count" role="status">0 条记录</span></div></div>
 <div id="tableMessage" class="table-message" role="status" hidden></div>
-<div class="active-chart-filter" id="coverageFilter" hidden><span id="coverageFilterLabel"></span><button type="button" id="clearCoverageFilter">清除图表筛选</button></div>
+<div class="active-chart-filter" id="coverageFilter" hidden><span id="coverageFilterLabel"></span><button type="button" id="clearCoverageFilter">清除字段筛选</button></div>
 <div class="table-wrap record-table-wrap"><table class="record-table" id="recordTable" aria-label="MOCR 数据记录"><colgroup id="columnWidths"></colgroup><thead id="head"></thead><tbody id="rows"></tbody></table></div>
 <div class="status-line"><span id="pageStatus">第 1 页</span><div class="pagination" id="pagination"></div></div></section>
 </div></main>
 <dialog class="modal" id="detail" aria-labelledby="detailTitle"><div class="modal-header"><h3 class="modal-title" id="detailTitle">记录详情</h3><button class="btn" id="close" type="button">关闭</button></div><div class="modal-body" id="detailBody"></div></dialog>
-<footer class="footer">MOCR 静态数据浏览器 · <a href="https://sunyrain.github.io/OPV2D/">OPV 数据库</a><br>点击记录查看条件、来源页码与覆盖限制；空白不等于原文未报告。论文全文与图像不在本站分发。<br><span id="quality"></span></footer>
+<footer class="footer">MOCR 光刻胶数据库 · <a href="https://sunyrain.github.io/OPV2D/">OPV 数据库</a><br>数值与单位按原文保留，完整条件与来源见记录详情。</footer>
 </body></html>

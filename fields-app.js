@@ -4,6 +4,11 @@
  try {
   await Promise.all([MOCRData.table('papers'),MOCRData.table('records'),MOCRData.charts().catch(()=>{})]);
   const data=MOCRData.data,papers=Object.fromEntries(data.papers.map(row=>[row.paper_id,row]));
+  const scopeWidget=MOCRCoverage.mountScope(el('analysisScopeOverview'),data.papers,scope=>{
+   if(el('analysisTable').value==='missing_fulltext')el('analysisTable').value='papers';
+   el('analysisScope').value=scope;
+   update();
+  });
   const widget=MOCRCoverage.mount(el('fieldCoverageExplorer'),{papers,onFilter:selection=>{
    const params=new URLSearchParams({table:el('analysisTable').value,field:selection.key,presence:selection.presence});
    for(const [id,key] of [['analysisScope','scope'],['analysisOrigin','origin'],['analysisExposure','exposure']])if(el(id).value)params.set(key,el(id).value);
@@ -19,6 +24,7 @@
    try {await MOCRData.table(table);} catch(error){if(epoch===updateEpoch)el('fieldChartLoading').textContent=`数据加载失败：${error.message}。请重新选择数据表重试。`;return;}
    if(epoch!==updateEpoch)return;
    for(const [id,enabled] of [['analysisScope',table!=='missing_fulltext'],['analysisOrigin',['records','properties'].includes(table)],['analysisExposure',table==='records']]){el(id).disabled=!enabled;if(!enabled)el(id).value='';}
+   scopeWidget.select(el('analysisScope').value);
    const rows=data[table].filter(row=>{const paper=papers[row.paper_id]||row;return(!el('analysisScope').value||paper.scope===el('analysisScope').value)&&(!el('analysisOrigin').value||row.data_origin===el('analysisOrigin').value)&&(!el('analysisExposure').value||row.exposure===el('analysisExposure').value);});
    const context=['analysisScope','analysisOrigin','analysisExposure'].filter(id=>el(id).value).map(id=>el(id).selectedOptions[0].textContent).join(' · ')||'全部数据';
    widget.update({table,rows,context});
